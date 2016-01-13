@@ -307,7 +307,7 @@ class HmacAuthV4Handler(AuthHandler, HmacKeys):
         self.region_name = region_name
 
     def _sign(self, key, msg, hex=False):
-        if not isinstance(key, bytes):
+        if not isinstance(key, str):
             key = key.encode('utf-8')
 
         if hex:
@@ -369,6 +369,7 @@ class HmacAuthV4Handler(AuthHandler, HmacKeys):
         them into a string, separated by newlines.
         """
         canonical = []
+        clean = {}
 
         for header in headers_to_sign:
             c_name = header.lower().strip()
@@ -377,8 +378,11 @@ class HmacAuthV4Handler(AuthHandler, HmacKeys):
                 c_value = raw_value.strip()
             else:
                 c_value = ' '.join(raw_value.strip().split())
-            canonical.append('%s:%s' % (c_name, c_value))
-        return '\n'.join(sorted(canonical))
+            clean[c_name] = c_value
+
+        for header in sorted(clean):
+            canonical.append('%s:%s' % (header, clean[header]))
+        return '\n'.join(canonical)
 
     def signed_headers(self, headers_to_sign):
         l = ['%s' % n.lower().strip() for n in headers_to_sign]
@@ -403,7 +407,7 @@ class HmacAuthV4Handler(AuthHandler, HmacKeys):
         # the entire body into memory.
         if hasattr(body, 'seek') and hasattr(body, 'read'):
             return boto.utils.compute_hash(body, hash_algorithm=sha256)[0]
-        elif not isinstance(body, bytes):
+        elif not isinstance(body, str):
             body = body.encode('utf-8')
         return sha256(body).hexdigest()
 
