@@ -1044,8 +1044,8 @@ def parse_qs_safe(qs, keep_blank_values=False, strict_parsing=False,
     if is_text_type:
         qs = qs.encode('ascii')  # URL encoding uses ASCII code points only
 
-    import urlparse
-    qs_dict = urlparse.parse_qs(qs, keep_blank_values, strict_parsing)
+    import cgi
+    qs_dict = cgi.parse_qs(qs, keep_blank_values, strict_parsing)
 
     if is_text_type:
         return decode_qs_dict(qs_dict, encoding, errors)
