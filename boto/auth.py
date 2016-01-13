@@ -572,7 +572,7 @@ class S3HmacAuthV4Handler(HmacAuthV4Handler, AuthHandler):
         # Urlencode the path, **NOT** ``auth_path`` (because vhosting).
         path = urlparse.urlparse(http_request.path)
         # Because some quoting may have already been applied, let's back it out.
-        unquoted = urllib.unquote(path.path)
+        unquoted = urllib.unquote(path.path.encode('utf-8'))
         # Requote, this time addressing all characters.
         encoded = urllib.quote(unquoted)
         return encoded
@@ -689,7 +689,7 @@ class S3HmacAuthV4Handler(HmacAuthV4Handler, AuthHandler):
             modified_req.params = copy_params
 
         raw_qs = parsed_path.query
-        existing_qs = urlparse.parse_qs(
+        existing_qs = boto.utils.parse_qs_safe(
             raw_qs,
             keep_blank_values=True
         )

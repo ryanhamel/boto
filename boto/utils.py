@@ -1034,3 +1034,28 @@ class RequestHook(object):
     """
     def handle_request_data(self, request, response, error=False):
         pass
+
+
+def parse_qs_safe(qs, keep_blank_values=False, strict_parsing=False,
+                  encoding='utf-8', errors='replace'):
+    """Parse a query handling unicode arguments properly in Python 2."""
+
+    is_text_type = isinstance(qs, unicode)
+    if is_text_type:
+        qs = qs.encode('ascii')  # URL encoding uses ASCII code points only
+
+    import urlparse
+    qs_dict = urlparse.parse_qs(qs, keep_blank_values, strict_parsing)
+
+    if is_text_type:
+        return decode_qs_dict(qs_dict, encoding, errors)
+    return qs_dict
+
+
+def decode_qs_dict(qs_dict, encoding='utf-8', errors='replace'):
+    result = {}
+    for (name, value) in qs_dict.items():
+        decoded_name = name.decode(encoding, errors)
+        decoded_value = [item.decode(encoding, errors) for item in value]
+        result[decoded_name] = decoded_value
+    return result
