@@ -328,7 +328,7 @@ class HmacAuthV4Handler(AuthHandler, HmacKeys):
         for name, value in http_request.headers.items():
             lname = name.lower()
             if lname.startswith('x-amz'):
-                if isinstance(value, bytes):
+                if isinstance(value, str):
                     value = value.decode('utf-8')
                 headers_to_sign[name] = value
         return headers_to_sign
