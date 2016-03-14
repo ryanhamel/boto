@@ -37,18 +37,8 @@ def load_endpoint_json(path):
 
     :returns: The loaded data
     """
-    
-    # If boto is deployed as a zip file, read the endpoint json out of the archive
-    if '.zip/' in path:
-        parts = path.split('.zip/')
-        import zipfile
-        archive = zipfile.ZipFile("%s.zip" % parts[0], 'r')
-        data = archive.read(parts[1])
-        archive.close()
-        return json.loads(data)
-    else:
-        with open(path, 'r') as endpoints_file:
-            return json.load(endpoints_file)
+    with open(path, 'r') as endpoints_file:
+        return json.load(endpoints_file)
 
 
 def merge_endpoints(defaults, additions):
@@ -91,7 +81,8 @@ def load_regions():
     :rtype: dict
     """
     # Load the defaults first.
-    endpoints = load_endpoint_json(boto.ENDPOINTS_PATH)
+    import boto.endpoints
+    endpoints = json.loads(boto.endpoints.endpoint_json)
     additional_path = None
 
     # Try the ENV var. If not, check the config file.
