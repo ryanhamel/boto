@@ -566,6 +566,11 @@ class S3HmacAuthV4Handler(HmacAuthV4Handler, AuthHandler):
             self.region_name = self.clean_region_name(self.region_name)
 
     def clean_region_name(self, region_name):
+        # NOTE: You cannot just strip off s3- from region names and assume
+        # it is actually the name of the region, case in point s3-external-1 does
+        # NOT yield a valid region
+        if region_name == "s3-external-1":
+            region_name = "us-east-1"
         if region_name.startswith('s3-'):
             return region_name[3:]
 
