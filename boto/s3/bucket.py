@@ -850,7 +850,8 @@ class Bucket(object):
                     src_bucket_name, validate=False)
             acl = src_bucket.get_xml_acl(src_key_name)
         if encrypt_key:
-            headers[provider.server_side_encryption_header] = 'AES256'
+            if provider.server_side_encryption_header not in headers:
+                headers[provider.server_side_encryption_header] = 'AES256'
         src = '%s/%s' % (src_bucket_name, urllib.quote(src_key_name))
         if src_version_id:
             src += '?versionId=%s' % src_version_id
