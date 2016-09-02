@@ -124,6 +124,9 @@ class Key(object):
         self.source_version_id = None
         self.delete_marker = False
         self.encrypted = None
+        self.encryption_type = 'AES256'
+        self.encryption_kms_key = None
+        self.etag_is_md5 = True
         # If the object is being restored, this attribute will be set to True.
         # If the object is restored, it will be set to False.  Otherwise this
         # value will be None. If the restore is completed (ongoing_restore =
@@ -670,7 +673,9 @@ class Key(object):
             if provider.storage_class_header:
                 headers[provider.storage_class_header] = self.storage_class
         if encrypt_key:
-            headers[provider.server_side_encryption_header] = 'AES256'
+            headers[provider.server_side_encryption_header] = self.encryption_type
+            if self.encryption_kms_key:
+                headers[provider.server_side_encryption_key_header] = self.encryption_kms_key
         headers = boto.utils.merge_meta(headers, self.metadata, provider)
 
         return self.bucket.connection.generate_url(expires_in, method,
@@ -931,7 +936,7 @@ class Key(object):
         if 200 <= response.status <= 299:
             self.etag = response.getheader('etag')
 
-            if self.etag != '"%s"' % self.md5:
+            if self.etag_is_md5 and self.etag != '"%s"' % self.md5:
                 raise provider.storage_data_error(
                     'ETag from S3 did not match computed MD5')
 
@@ -1153,7 +1158,9 @@ class Key(object):
         if policy:
             headers[provider.acl_header] = policy
         if encrypt_key:
-            headers[provider.server_side_encryption_header] = 'AES256'
+            headers[provider.server_side_encryption_header] = self.encryption_type
+            if self.encryption_kms_key:
+                headers[provider.server_side_encryption_key_header] = self.encryption_kms_key
 
         if rewind:
             # caller requests reading from beginning of fp.
@@ -1862,3 +1869,8 @@ class Key(object):
             raise provider.storage_response_error(response.status,
                                                   response.reason,
                                                   response.read())
+
+    def enable_kms_encryption(self, kms_key):
+        self.etag_is_md5 = False
+        self.encryption_type = "aws:kms"
+        self.encryption_kms_key = kms_key
